@@ -1,9 +1,5 @@
-import { Bot } from 'grammy'
+import { createBot } from './core/bot.ts'
+import { config } from './config.ts'
 
-const bot = new Bot(process.env.BOT_TOKEN)
-
-bot.command("start", (ctx) => {
-    ctx.reply("Hello World")
-})
-
+const bot = createBot(config.botToken)
 bot.start()
