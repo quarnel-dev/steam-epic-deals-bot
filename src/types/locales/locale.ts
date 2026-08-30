@@ -1,6 +1,18 @@
 export interface Locale {
   start: {
     welcome: string
+    description: string
+    instruction: string
+  }
+  menu: {
+    title: string
+    description: string
+    buttons: {
+      steam: string
+      epic: string
+      settings: string
+      back: string
+    }
   }
   deals: {
     loading: string
