@@ -1,6 +1,5 @@
 import type { Context } from 'grammy'
-import { getMenuKeyboard } from '#core/commands/menu/menu.keyboard.ts'
-import { t } from '#locales/index.ts'
+import { renderMenu } from '#core/commands/menu/menu.render.ts'
 
 export async function handleMenuCallback(ctx: Context) {
   const queryData = ctx.callbackQuery?.data
@@ -8,11 +7,6 @@ export async function handleMenuCallback(ctx: Context) {
   await ctx.answerCallbackQuery()
 
   if (queryData === 'menu_back') {
-    const text = `${t('menu.title')}\n\n${t('menu.description')}`
-
-    await ctx.editMessageText(text, {
-      parse_mode: 'HTML',
-      reply_markup: getMenuKeyboard(),
-    })
+    await renderMenu(ctx, { editMessage: true })
   }
 }
