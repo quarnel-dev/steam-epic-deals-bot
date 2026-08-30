@@ -13,10 +13,10 @@ export interface SteamFeaturedItem {
 export interface SteamFeaturedCategory {
   id: string
   name: string
-  items: SteamFeaturedItem[]
+  items?: SteamFeaturedItem[]
 }
 
 export interface SteamFeaturedCategoriesResponse {
-  specials: SteamFeaturedCategory
+  specials?: SteamFeaturedCategory
   status: number
 }

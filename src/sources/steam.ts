@@ -10,6 +10,7 @@ export async function fetchSteamDeals(): Promise<SteamFeaturedItem[]> {
   }
 
   const data = (await res.json()) as SteamFeaturedCategoriesResponse
+  const items = data.specials?.items ?? []
 
-  return data.specials.items.filter((item) => item.discounted)
+  return items.filter((item) => item.discounted)
 }
