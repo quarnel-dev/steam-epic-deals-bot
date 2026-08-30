@@ -1,4 +1,4 @@
-import { createBot } from '#core/bot.ts'
+import { createBot } from '#core/bot.core.ts'
 import { config } from './config.ts'
 
 const bot = createBot(config.botToken)
