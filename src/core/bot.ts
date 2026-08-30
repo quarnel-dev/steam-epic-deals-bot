@@ -1,7 +1,8 @@
 import { Bot } from 'grammy'
 import { startCommand } from './commands/start.ts'
 import { dealsCommand } from './commands/deals.ts'
-import { menuCommand } from './commands/menu.ts'
+import { menuCommand } from './commands/menu/menu.command.ts'
+import { handleMenuCallback } from './handlers/menu.ts'
 
 export function createBot(token: string) {
   const bot = new Bot(token)
@@ -9,6 +10,8 @@ export function createBot(token: string) {
   bot.command('start', startCommand)
   bot.command('deals', dealsCommand)
   bot.command('menu', menuCommand)
+
+  bot.callbackQuery(/^menu_/, handleMenuCallback)
 
   return bot
 }
