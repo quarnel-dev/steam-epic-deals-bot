@@ -1,6 +1,6 @@
 import { Bot } from 'grammy'
-import { startCommand } from './commands/start/start.command.ts'
-import { menuCommand } from './commands/menu/menu.command.ts'
+import { startCommand } from './screens/start/start.command.ts'
+import { menuCommand } from './screens/menu/menu.command.ts'
 import { handleMenuCallback } from './handlers/menu.handler.ts'
 
 export function createBot(token: string) {
