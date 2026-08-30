@@ -9,7 +9,8 @@
   "imports": {
     "#core/*": "./src/core/*",
     "#locales/*": "./src/locales/*",
-    "#types/*": "./src/types/*"
+    "#types/*": "./src/types/*",
+    "#sources/*": "./src/sources/*"
   },
   "author": "Quarnel",
   "license": "MIT",

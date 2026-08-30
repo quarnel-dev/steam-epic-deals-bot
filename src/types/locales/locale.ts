@@ -2,6 +2,14 @@ export interface Locale {
   start: {
     welcome: string
   }
+  deals: {
+    loading: string
+    empty: string
+    header: string
+    discount: string
+    price: string
+    error: string
+  }
 }
 
 type DotPaths<T> = T extends string
