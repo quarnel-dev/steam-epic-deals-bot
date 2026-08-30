@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "es2025",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["es2025"],
+    "types": ["node", "./env.d.ts"],
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "resolveJsonModule": true,
+    "noEmit": true,
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}

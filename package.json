@@ -1,0 +1,19 @@
+{
+  "name": "steam-epic-deals-bot",
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "node --env-file=.env src/main.ts",
+    "dev": "node  --env-file=.env --watch src/main.ts"
+  },
+  "author": "Quarnel",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "grammy": "^1.46.0",
+    "node-cron": "^4.6.0",
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0"
+  }
+}
