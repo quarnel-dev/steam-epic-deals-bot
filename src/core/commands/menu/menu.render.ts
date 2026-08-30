@@ -1,12 +1,10 @@
 import type { Context } from 'grammy'
 
+import type { MenuOptions } from './menu.type.ts'
+
 import { getMenuKeyboard } from './menu.keyboard.ts'
 
 import { t } from '#locales/index.ts'
-
-interface MenuOptions {
-  editMessage?: boolean
-}
 
 export async function renderMenu(ctx: Context, options: MenuOptions = {}) {
   const text = `${t('menu.title')}\n\n${t('menu.description')}`

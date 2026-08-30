@@ -1,4 +1,4 @@
-import type { SteamFeaturedCategoriesResponse, SteamFeaturedItem } from '#types/sources/steam.ts'
+import type { SteamFeaturedCategoriesResponse, SteamFeaturedItem } from '#types/sources/steam.type.ts'
 
 const STEAM_API_URL = 'https://store.steampowered.com/api/featuredcategories'
 

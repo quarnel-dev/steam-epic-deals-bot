@@ -1,4 +1,4 @@
-import type { Locale } from '#types/locales/locale.ts'
+import type { Locale } from '#types/locales/locale.type.ts'
 
 export const en = {
   start: {

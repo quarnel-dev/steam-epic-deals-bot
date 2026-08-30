@@ -1,6 +1,6 @@
 import { en } from './en.locale.ts'
 
-import type { Locale, LocalKey } from '#types/locales/locale.ts'
+import type { Locale, LocalKey } from '#types/locales/locale.type.ts'
 
 export const locales = { en } satisfies Record<string, Locale>
 
