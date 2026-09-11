@@ -8,6 +8,8 @@ import { componentSteamDealCard } from '#core/components/steam.component.ts'
 import { t } from '#locales/index.ts'
 import { getSteamKeyboard, getSteamPaginationKeyboard } from './steam.keyboard.ts'
 import { fetchSteamAppDetails } from '#sources/steamDetails.source.ts'
+import { getUserSettings } from '#db/index.ts'
+import { CURRENCY_TO_CC } from '#types/settings/settings.type.ts'
 
 const STEAM_FALLBACK_IMAGE = 'https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016'
 
@@ -38,7 +40,11 @@ export async function renderSteamMenu(ctx: Context) {
 
 export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top', pageIndex: number = 0) {
   try {
-    let deals = await fetchSteamDeals()
+    const userId = ctx.from!.id
+    const settings = getUserSettings(userId)
+    const cc = CURRENCY_TO_CC[settings.currency]
+
+    let deals = await fetchSteamDeals(cc)
 
     if (filter === 'd50') deals = deals.filter((d) => d.discount_percent >= 50)
     if (filter === 'd75') deals = deals.filter((d) => d.discount_percent >= 75)
@@ -52,7 +58,7 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
     }
 
     const currentDeal = deals[pageIndex] ?? deals[0]
-    const details = await fetchSteamAppDetails(currentDeal.id)
+    const details = await fetchSteamAppDetails(currentDeal.id, cc)
 
     const caption = componentSteamDealCard(currentDeal, details)
     const gameUrl = `https://store.steampowered.com/app/${currentDeal.id}`
