@@ -7,6 +7,8 @@ export interface SteamFeaturedItem {
   final_price: number
   currency: string
   header_image: string
+  small_capsule_image?: string
+  large_capsule_image?: string
   discount_expiration?: number
 }
 
@@ -20,3 +22,5 @@ export interface SteamFeaturedCategoriesResponse {
   specials?: SteamFeaturedCategory
   status: number
 }
+
+export type SteamFilter = 'top' | 'd50' | 'd75' | 'd90'
