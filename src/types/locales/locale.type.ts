@@ -44,6 +44,26 @@ export interface Locale {
       platformsLinux: string
     }
   }
+  settings: {
+    title: string
+    description: string
+    labels: {
+      language: string
+      currency: string
+      epicNotifications: string
+      steamNotifications: string
+    }
+    values: {
+      on: string
+      off: string
+    }
+    buttons: {
+      language: string
+      currency: string
+      epicNotifications: string
+      steamNotifications: string
+    }
+  }
   deals: {
     loading: string
     empty: string

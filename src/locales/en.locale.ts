@@ -47,6 +47,26 @@ export const en = {
       platformsLinux: 'Linux',
     },
   },
+  settings: {
+    title: '⚙️ <b>Settings</b>',
+    description: 'Configure your language, currency, and notifications:',
+    labels: {
+      language: 'Language',
+      currency: 'Currency',
+      epicNotifications: 'Epic free games',
+      steamNotifications: 'Steam deals',
+    },
+    values: {
+      on: 'On',
+      off: 'Off',
+    },
+    buttons: {
+      language: '🌐 Language',
+      currency: '💱 Currency',
+      epicNotifications: '🎁 Epic notifications',
+      steamNotifications: '🎮 Steam notifications',
+    },
+  },
   deals: {
     loading: '🔎 Fetching Steam deals...',
     empty: '🔥 No active Steam deals at the moment.',
