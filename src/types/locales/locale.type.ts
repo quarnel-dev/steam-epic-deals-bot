@@ -27,6 +27,22 @@ export interface Locale {
       discount90: string
       open: string
     }
+    deal: {
+      title: string
+      discount: string
+      priceFrom: string
+      priceOnly: string
+      savings: string
+      genres: string
+      developers: string
+      metacritic: string
+      recommendations: string
+      platforms: string
+      ends: string
+      platformsWindows: string
+      platformsMac: string
+      platformsLinux: string
+    }
   }
   deals: {
     loading: string

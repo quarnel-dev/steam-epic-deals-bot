@@ -23,4 +23,25 @@ export interface SteamFeaturedCategoriesResponse {
   status: number
 }
 
+export interface SteamAppDetails {
+  appid: number
+  name: string
+  short_description?: string
+  developers?: string[]
+  publishers?: string[]
+  genres?: { id: string; description: string }[]
+  categories?: { id: number; description: string }[]
+  release_date?: { coming_soon: boolean; date: string }
+  metacritic?: { score: number; url: string }
+  recommendations?: { total: number }
+  platforms?: { windows: boolean; mac: boolean; linux: boolean }
+}
+
+export interface SteamAppDetailsResponse {
+  [appid: string]: {
+    success: boolean
+    data?: SteamAppDetails
+  }
+}
+
 export type SteamFilter = 'top' | 'd50' | 'd75' | 'd90'
