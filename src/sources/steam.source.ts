@@ -1,12 +1,13 @@
 import type { SteamFeaturedCategoriesResponse, SteamFeaturedItem } from '#types/sources/steam.type.ts'
 
-const STEAM_API_URL = 'https://store.steampowered.com/api/featuredcategories?cc=us&l=en'
+const STEAM_API_URL = 'https://store.steampowered.com/api/featuredcategories'
 
-export async function fetchSteamDeals(): Promise<SteamFeaturedItem[]> {
-  const res = await fetch(STEAM_API_URL)
+export async function fetchSteamDeals(cc: string = 'us'): Promise<SteamFeaturedItem[]> {
+  const url = `${STEAM_API_URL}?cc=${cc}&l=en`
+  const res = await fetch(url)
 
   if (!res.ok) {
-    throw new Error(`Steam API request failed with status ${res.status}`)
+    throw new Error(`Steam API error: ${res.status}`)
   }
 
   const data = (await res.json()) as SteamFeaturedCategoriesResponse
