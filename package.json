@@ -10,18 +10,21 @@
     "#core/*": "./src/core/*",
     "#locales/*": "./src/locales/*",
     "#types/*": "./src/types/*",
-    "#sources/*": "./src/sources/*"
+    "#sources/*": "./src/sources/*",
+    "#db/*": "./src/db/*"
   },
   "author": "Quarnel",
   "license": "MIT",
   "type": "module",
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
     "grammy": "^1.46.0",
     "node-cron": "^4.6.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.4.0"
   }
 }
