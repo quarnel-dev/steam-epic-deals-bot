@@ -1,6 +1,7 @@
 import type { Context } from 'grammy'
 import { renderMenu } from '#core/screens/menu/menu.render.ts'
 import { renderSteamMenu } from '#core/screens/steam/steam.render.ts'
+import { renderSettings } from '#core/screens/settings/settings.render.ts'
 
 export async function handleMenuCallback(ctx: Context) {
   const queryData = ctx.callbackQuery?.data
@@ -14,6 +15,11 @@ export async function handleMenuCallback(ctx: Context) {
     } else {
       await renderMenu(ctx, { editMessage: true })
     }
+    return
+  }
+
+  if (queryData === 'menu_settings') {
+    await renderSettings(ctx)
     return
   }
 
