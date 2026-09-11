@@ -11,7 +11,21 @@ export interface Locale {
       steam: string
       epic: string
       settings: string
-      back: string
+    }
+  }
+  buttons: {
+    back: string
+    refresh: string
+  }
+  steam: {
+    title: string
+    description: string
+    buttons: {
+      top: string
+      discount50: string
+      discount75: string
+      discount90: string
+      open: string
     }
   }
   deals: {

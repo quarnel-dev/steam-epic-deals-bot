@@ -14,7 +14,21 @@ export const en = {
       steam: '🎮 Steam Deals',
       epic: '🎁 Epic Free Games',
       settings: '⚙️ Settings',
-      back: '🔙 Back',
+    },
+  },
+  buttons: {
+    back: '🔙 Back',
+    refresh: '🔄 Refresh',
+  },
+  steam: {
+    title: '🎮 <b>Steam Deals Menu</b>',
+    description: 'Choose how you want to filter active Steam deals:',
+    buttons: {
+      top: '🔥 Top Deals',
+      discount50: '💥 50%+ Off',
+      discount75: '⚡ 75%+ Off',
+      discount90: '🚀 90%+ Off',
+      open: '🔗 Open in Steam',
     },
   },
   deals: {
