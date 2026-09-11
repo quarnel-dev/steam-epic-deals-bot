@@ -4,9 +4,10 @@ import { InputMediaBuilder } from 'grammy'
 import type { SteamFilter } from '#types/sources/steam.type.ts'
 
 import { fetchSteamDeals } from '#sources/steam.source.ts'
-import { formatSteamDealCard } from '#core/components/steam.component.ts'
+import { componentSteamDealCard } from '#core/components/steam.component.ts'
 import { t } from '#locales/index.ts'
 import { getSteamKeyboard, getSteamPaginationKeyboard } from './steam.keyboard.ts'
+import { fetchSteamAppDetails } from '#sources/steamDetails.source.ts'
 
 const STEAM_FALLBACK_IMAGE = 'https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016'
 
@@ -51,7 +52,9 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
     }
 
     const currentDeal = deals[pageIndex] ?? deals[0]
-    const caption = formatSteamDealCard(currentDeal)
+    const details = await fetchSteamAppDetails(currentDeal.id)
+
+    const caption = componentSteamDealCard(currentDeal, details)
     const gameUrl = `https://store.steampowered.com/app/${currentDeal.id}`
     const replyMarkup = getSteamPaginationKeyboard(filter, pageIndex, deals.length, gameUrl)
 
