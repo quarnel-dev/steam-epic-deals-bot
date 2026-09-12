@@ -37,3 +37,7 @@ export function getSteamPaginationKeyboard(filter: SteamFilter, index: number, t
 
   return kb
 }
+
+export function getSteamOpenKeyboard(gameUrl: string) {
+  return new InlineKeyboard().url(t('steam.buttons.open'), gameUrl)
+}
