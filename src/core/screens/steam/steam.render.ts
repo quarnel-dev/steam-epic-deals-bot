@@ -45,7 +45,7 @@ export async function renderSteamCard(ctx: AppContext, filter: SteamFilter = 'to
     const settings = getUserSettings(userId)
     const cc = CURRENCY_TO_CC[settings.currency]
 
-    let deals = getSteamDealsAsFeatured(cc)
+    let deals = getSteamDealsAsFeatured(cc, ctx.settings.language)
 
     if (filter === 'd50') deals = deals.filter((d) => d.discount_percent >= 50)
     if (filter === 'd75') deals = deals.filter((d) => d.discount_percent >= 75)
@@ -60,7 +60,7 @@ export async function renderSteamCard(ctx: AppContext, filter: SteamFilter = 'to
     }
 
     const currentDeal = deals[pageIndex] ?? deals[0]
-    const details = getSteamAppDetails(currentDeal.id, cc)
+    const details = getSteamAppDetails(currentDeal.id, cc, ctx.settings.language)
 
     const caption = componentSteamDealCard(ctx.t, currentDeal, details)
     const gameUrl = `https://store.steampowered.com/app/${currentDeal.id}`

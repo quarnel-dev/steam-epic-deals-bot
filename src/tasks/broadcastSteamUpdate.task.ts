@@ -8,9 +8,9 @@ import { createT, type TFn } from '#locales/index.ts'
 import { sleep } from '#utils/sleep.util.ts'
 import { logger } from '#logger/index.ts'
 
-import type { SteamFeaturedItem } from '#types/sources/steam.type.ts'
 import type { UpdateResult } from '#types/tasks/steamDeals.type.ts'
 import type { BroadcastResult } from '#types/tasks/steamBroadcast.type.ts'
+import type { AppContext } from '#types/context.type.ts'
 
 const MESSAGE_DELAY_MIN_MS = 10000
 const MESSAGE_DELAY_MAX_MS = 20000
@@ -24,46 +24,50 @@ function randomDelay(): number {
 }
 
 function buildSummaryMessage(t: TFn, results: UpdateResult[]): string {
-  const totalBefore = results.reduce((sum, r) => sum + r.total - r.diff.added.length + r.diff.removed.length, 0)
-  const totalAfter = results.reduce((sum, r) => sum + r.total, 0)
-  const added = results.reduce((sum, r) => sum + r.diff.added.length, 0)
-  const changed = results.reduce((sum, r) => sum + r.diff.changed.length, 0)
-  const removed = results.reduce((sum, r) => sum + r.diff.removed.length, 0)
+  const en = results.filter((r) => r.lang === 'en')
+
+  const totalBefore = en.reduce((sum, r) => sum + r.total - r.diff.added.length + r.diff.removed.length, 0)
+  const totalAfter = en.reduce((sum, r) => sum + r.total, 0)
+  const added = en.reduce((sum, r) => sum + r.diff.added.length, 0)
+  const changed = en.reduce((sum, r) => sum + r.diff.changed.length, 0)
+  const removed = en.reduce((sum, r) => sum + r.diff.removed.length, 0)
 
   return t('steam.update.summary', { before: totalBefore, after: totalAfter, added, changed, removed })
 }
 
 function buildRemovedMessage(t: TFn, results: UpdateResult[]): string | null {
-  const removed = results.flatMap((r) => r.diff.removed)
+  const en = results.filter((r) => r.lang === 'en')
+  const removed = en.flatMap((r) => r.diff.removed)
   if (removed.length === 0) return null
 
   return t('steam.update.removed', { count: removed.length })
 }
 
-function pickTopDeal(results: UpdateResult[]): { deal: SteamFeaturedItem; cc: string } | null {
-  const added = results.flatMap((r) => r.diff.added.map((row) => ({ row, cc: r.cc })))
+function pickTopDeal(results: UpdateResult[]): { cc: string; appId: number } | null {
+  const enResults = results.filter((r) => r.lang === 'en')
+
+  const added = enResults.flatMap((r) => r.diff.added.map((row) => ({ row, cc: r.cc })))
 
   if (added.length > 0) {
     const top = [...added].sort((a, b) => b.row.discount_percent - a.row.discount_percent)[0]
-    const deal = getSteamDealsAsFeatured(top.cc).find((d) => d.id === top.row.app_id)
-    if (deal) return { deal, cc: top.cc }
+    return { cc: top.cc, appId: top.row.app_id }
   }
 
   const changed = results.flatMap((r) => r.diff.changed.map((c) => ({ c, cc: r.cc })))
 
   if (changed.length > 0) {
     const top = [...changed].sort((a, b) => b.c.new_discount - a.c.new_discount)[0]
-    const deal = getSteamDealsAsFeatured(top.cc).find((d) => d.id === top.c.app_id)
-    if (deal) return { deal, cc: top.cc }
+    return { cc: top.cc, appId: top.c.app_id }
   }
 
   return null
 }
 
-async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[]): Promise<boolean> {
+async function sendUserMessages(bot: Bot<AppContext>, userId: number, results: UpdateResult[]): Promise<boolean> {
   try {
     const settings = getUserSettings(userId)
     const t = createT(settings.language)
+    const lang = settings.language
 
     await bot.api.sendMessage(userId, buildSummaryMessage(t, results), { parse_mode: 'HTML' })
     await sleep(randomDelay())
@@ -71,26 +75,22 @@ async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[
     const top = pickTopDeal(results)
 
     if (top) {
-      logger.debug(`sending top deal card to user`, {
-        module: 'broadcast.task',
-        userId,
-        appId: top.deal.id,
-        cc: top.cc,
-      })
+      const deal = getSteamDealsAsFeatured(top.cc, lang).find((d) => d.id === top.appId)
+      if (deal) {
+        const details = getSteamAppDetails(deal.id, top.cc, lang)
+        const caption = componentSteamDealCard(t, deal, details)
+        const gameUrl = `https://store.steampowered.com/app/${deal.id}`
+        const keyboard = getSteamOpenKeyboard(t, gameUrl)
+        const imageUrl = deal.header_image || STEAM_FALLBACK_IMAGE
 
-      const details = getSteamAppDetails(top.deal.id, top.cc)
-      const caption = componentSteamDealCard(t, top.deal, details)
-      const gameUrl = `https://store.steampowered.com/app/${top.deal.id}`
-      const keyboard = getSteamOpenKeyboard(t, gameUrl)
-      const imageUrl = top.deal.header_image || STEAM_FALLBACK_IMAGE
+        await bot.api.sendPhoto(userId, imageUrl, {
+          caption,
+          parse_mode: 'HTML',
+          reply_markup: keyboard,
+        })
 
-      await bot.api.sendPhoto(userId, imageUrl, {
-        caption,
-        parse_mode: 'HTML',
-        reply_markup: keyboard,
-      })
-
-      await sleep(randomDelay())
+        await sleep(randomDelay())
+      }
     }
 
     const removed = buildRemovedMessage(t, results)
@@ -105,7 +105,7 @@ async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[
   }
 }
 
-export async function broadcastSteamUpdate(bot: Bot, results: UpdateResult[]): Promise<BroadcastResult> {
+export async function broadcastSteamUpdate(bot: Bot<AppContext>, results: UpdateResult[]): Promise<BroadcastResult> {
   const start = Date.now()
   const pending = getPendingSteamChanges()
   const result: BroadcastResult = { sent: 0, failed: 0, skipped: 0 }
