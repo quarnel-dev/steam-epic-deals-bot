@@ -17,12 +17,12 @@ Telegram-бот для отслеживания скидок в Steam и бес�
 
 ## Быстрый старт
 
-\`\`\`bash
+```bash
 npm install
 cp .env.example .env
 # укажите BOT_TOKEN в .env
 npm run dev
-\`\`\`
+```
 
 ## Скрипты
 
