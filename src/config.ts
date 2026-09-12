@@ -9,4 +9,5 @@ function getEnv(key: keyof NodeJS.ProcessEnv, fallback?: string): string {
 export const config = {
   botToken: getEnv('BOT_TOKEN'),
   cronSchedule: getEnv('CRON_SCHEDULE', '0 12 * * *'),
+  logLevel: getEnv('LOG_LEVEL', 'info')
 } as const
