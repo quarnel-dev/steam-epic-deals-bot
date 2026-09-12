@@ -10,10 +10,6 @@ export async function renderMenu(ctx: Context, options: MenuOptions = {}) {
   const text = `${t('menu.title')}\n\n${t('menu.description')}`
 
   if (options.editMessage) {
-    if (ctx.callbackQuery) {
-      await ctx.answerCallbackQuery()
-    }
-
     await ctx.editMessageText(text, {
       parse_mode: 'HTML',
       reply_markup: getMenuKeyboard(),
