@@ -6,9 +6,13 @@ import type { SteamDealRow, SteamAppDetailsRow, SteamDealChangeRow, DealsDiff } 
 const db = createDatabase('./data/steam.db')
 
 db.exec(`
+  DROP TABLE IF EXISTS steam_deals;
+  DROP TABLE IF EXISTS steam_app_details;
+
   CREATE TABLE IF NOT EXISTS steam_deals (
     app_id INTEGER NOT NULL,
     cc TEXT NOT NULL,
+    lang TEXT NOT NULL,
     name TEXT NOT NULL,
     discount_percent INTEGER NOT NULL,
     original_price INTEGER,
@@ -17,12 +21,13 @@ db.exec(`
     header_image TEXT NOT NULL,
     discount_expiration INTEGER,
     updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
-    PRIMARY KEY (app_id, cc)
+    PRIMARY KEY (app_id, cc, lang)
   );
 
   CREATE TABLE IF NOT EXISTS steam_app_details (
     app_id INTEGER NOT NULL,
     cc TEXT NOT NULL,
+    lang TEXT NOT NULL,
     short_description TEXT,
     developers TEXT,
     genres TEXT,
@@ -32,7 +37,7 @@ db.exec(`
     platforms_mac INTEGER NOT NULL DEFAULT 0,
     platforms_linux INTEGER NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
-    PRIMARY KEY (app_id, cc)
+    PRIMARY KEY (app_id, cc, lang)
   );
 
   CREATE TABLE IF NOT EXISTS steam_deal_changes (
@@ -50,13 +55,13 @@ db.exec(`
     ON steam_deal_changes (notified, detected_at);
 `)
 
-const selectDealsByCc = db.prepare('SELECT * FROM steam_deals WHERE cc = ? ORDER BY discount_percent DESC')
-const selectDeal = db.prepare('SELECT * FROM steam_deals WHERE app_id = ? AND cc = ?')
-const deleteDealsByCc = db.prepare('DELETE FROM steam_deals WHERE cc = ?')
+const selectDealsByCcLang = db.prepare('SELECT * FROM steam_deals WHERE cc = ? AND lang = ? ORDER BY discount_percent DESC')
+const selectDeal = db.prepare('SELECT * FROM steam_deals WHERE app_id = ? AND cc = ? AND lang = ?')
+const deleteDealsByCcLang = db.prepare('DELETE FROM steam_deals WHERE cc = ? AND lang = ?')
 const upsertDeal = db.prepare(`
-  INSERT INTO steam_deals (app_id, cc, name, discount_percent, original_price, final_price, currency, header_image, discount_expiration)
-  VALUES (@app_id, @cc, @name, @discount_percent, @original_price, @final_price, @currency, @header_image, @discount_expiration)
-  ON CONFLICT(app_id, cc) DO UPDATE SET
+  INSERT INTO steam_deals (app_id, cc, lang, name, discount_percent, original_price, final_price, currency, header_image, discount_expiration)
+  VALUES (@app_id, @cc, @lang, @name, @discount_percent, @original_price, @final_price, @currency, @header_image, @discount_expiration)
+  ON CONFLICT(app_id, cc, lang) DO UPDATE SET
     name = excluded.name,
     discount_percent = excluded.discount_percent,
     original_price = excluded.original_price,
@@ -67,11 +72,11 @@ const upsertDeal = db.prepare(`
     updated_at = unixepoch()
 `)
 
-const selectDetails = db.prepare('SELECT * FROM steam_app_details WHERE app_id = ? AND cc = ?')
+const selectDetails = db.prepare('SELECT * FROM steam_app_details WHERE app_id = ? AND cc = ? AND lang = ?')
 const upsertDetails = db.prepare(`
-  INSERT INTO steam_app_details (app_id, cc, short_description, developers, genres, metacritic_score, recommendations_total, platforms_windows, platforms_mac, platforms_linux)
-  VALUES (@app_id, @cc, @short_description, @developers, @genres, @metacritic_score, @recommendations_total, @platforms_windows, @platforms_mac, @platforms_linux)
-  ON CONFLICT(app_id, cc) DO UPDATE SET
+  INSERT INTO steam_app_details (app_id, cc, lang, short_description, developers, genres, metacritic_score, recommendations_total, platforms_windows, platforms_mac, platforms_linux)
+  VALUES (@app_id, @cc, @lang, @short_description, @developers, @genres, @metacritic_score, @recommendations_total, @platforms_windows, @platforms_mac, @platforms_linux)
+  ON CONFLICT(app_id, cc, lang) DO UPDATE SET
     short_description = excluded.short_description,
     developers = excluded.developers,
     genres = excluded.genres,
@@ -90,28 +95,29 @@ const insertChange = db.prepare(`
 const selectPendingChanges = db.prepare('SELECT * FROM steam_deal_changes WHERE notified = 0 ORDER BY detected_at ASC')
 const markChangesNotified = db.prepare('UPDATE steam_deal_changes SET notified = 1 WHERE id = ?')
 
-export function getSteamDeals(cc: string): SteamDealRow[] {
-  return selectDealsByCc.all(cc) as SteamDealRow[]
+export function getSteamDeals(cc: string, lang: string): SteamDealRow[] {
+  return selectDealsByCcLang.all(cc, lang) as SteamDealRow[]
 }
 
-export function getSteamDeal(appId: number, cc: string): SteamDealRow | undefined {
-  return selectDeal.get(appId, cc) as SteamDealRow | undefined
+export function getSteamDeal(appId: number, cc: string, lang: string): SteamDealRow | undefined {
+  return selectDeal.get(appId, cc, lang) as SteamDealRow | undefined
 }
 
-export function replaceSteamDeals(cc: string, deals: SteamFeaturedItem[]): DealsDiff {
-  const oldRows = getSteamDeals(cc)
+export function replaceSteamDeals(cc: string, lang: string, deals: SteamFeaturedItem[]): DealsDiff {
+  const oldRows = getSteamDeals(cc, lang)
   const oldMap = new Map(oldRows.map((r) => [r.app_id, r]))
   const newIds = new Set(deals.map((d) => d.id))
 
   const diff: DealsDiff = { added: [], changed: [], removed: [] }
 
   const tx = db.transaction(() => {
-    deleteDealsByCc.run(cc)
+    deleteDealsByCcLang.run(cc, lang)
 
     for (const deal of deals) {
       upsertDeal.run({
         app_id: deal.id,
         cc,
+        lang,
         name: deal.name,
         discount_percent: deal.discount_percent,
         original_price: deal.original_price ?? null,
@@ -127,6 +133,7 @@ export function replaceSteamDeals(cc: string, deals: SteamFeaturedItem[]): Deals
         diff.added.push({
           app_id: deal.id,
           cc,
+          lang,
           name: deal.name,
           discount_percent: deal.discount_percent,
           original_price: deal.original_price ?? null,
@@ -136,7 +143,7 @@ export function replaceSteamDeals(cc: string, deals: SteamFeaturedItem[]): Deals
           discount_expiration: deal.discount_expiration ?? null,
           updated_at: Math.floor(Date.now() / 1000),
         })
-        insertChange.run(deal.id, cc, 'added', null, deal.discount_percent)
+        if (lang === 'en') insertChange.run(deal.id, cc, 'added', null, deal.discount_percent)
         continue
       }
 
@@ -146,14 +153,14 @@ export function replaceSteamDeals(cc: string, deals: SteamFeaturedItem[]): Deals
           old_discount: old.discount_percent,
           new_discount: deal.discount_percent,
         })
-        insertChange.run(deal.id, cc, 'changed', old.discount_percent, deal.discount_percent)
+        if (lang === 'en') insertChange.run(deal.id, cc, 'changed', old.discount_percent, deal.discount_percent)
       }
     }
 
     for (const old of oldRows) {
       if (!newIds.has(old.app_id)) {
         diff.removed.push(old.app_id)
-        insertChange.run(old.app_id, cc, 'removed', old.discount_percent, null)
+        if (lang === 'en') insertChange.run(old.app_id, cc, 'removed', old.discount_percent, null)
       }
     }
   })
@@ -163,8 +170,8 @@ export function replaceSteamDeals(cc: string, deals: SteamFeaturedItem[]): Deals
   return diff
 }
 
-export function getSteamAppDetails(appId: number, cc: string): SteamAppDetails | null {
-  const row = selectDetails.get(appId, cc) as SteamAppDetailsRow | undefined
+export function getSteamAppDetails(appId: number, cc: string, lang: string): SteamAppDetails | null {
+  const row = selectDetails.get(appId, cc, lang) as SteamAppDetailsRow | undefined
   if (!row) return null
 
   return {
@@ -183,10 +190,11 @@ export function getSteamAppDetails(appId: number, cc: string): SteamAppDetails |
   }
 }
 
-export function saveSteamAppDetails(appId: number, cc: string, details: SteamAppDetails): void {
+export function saveSteamAppDetails(appId: number, cc: string, lang: string, details: SteamAppDetails): void {
   upsertDetails.run({
     app_id: appId,
     cc,
+    lang,
     short_description: details.short_description ?? null,
     developers: details.developers ? JSON.stringify(details.developers) : null,
     genres: details.genres ? JSON.stringify(details.genres.map((g) => g.description)) : null,
@@ -204,13 +212,12 @@ export function getPendingSteamChanges(): SteamDealChangeRow[] {
 
 export function markSteamChangesNotified(ids: number[]): void {
   const tx = db.transaction((changeIds: number[]) => {
-    for (const id of changeIds) markChangesNotified.run(id)
+    for (const id of changeIds) markChangesNotified.run(id) // ← вот тут
   })
   tx(ids)
 }
-
-export function getSteamDealsAsFeatured(cc: string): SteamFeaturedItem[] {
-  return getSteamDeals(cc).map((row) => ({
+export function getSteamDealsAsFeatured(cc: string, lang: string): SteamFeaturedItem[] {
+  return getSteamDeals(cc, lang).map((row) => ({
     id: row.app_id,
     name: row.name,
     discount_percent: row.discount_percent,
