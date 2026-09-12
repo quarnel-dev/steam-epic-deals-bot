@@ -11,7 +11,7 @@ export function createBot(token: string) {
 
   bot.catch((err) => {
     const ctx = err.ctx
-    console.error(`Error while handing update ${ctx.update.update_id}: `, err.error)
+    console.error(`Error while handling update ${ctx.update.update_id}: `, err.error)
   })
 
   bot.use(ensureUser)
