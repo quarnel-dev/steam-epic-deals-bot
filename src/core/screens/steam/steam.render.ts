@@ -72,6 +72,7 @@ export async function renderSteamCard(ctx: AppContext, filter: SteamFilter = 'to
       module: 'steam.render',
       userId,
       cc,
+      lang: ctx.settings.language,
       filter,
       appId: currentDeal.id,
       page: `${pageIndex + 1}/${deals.length}`,

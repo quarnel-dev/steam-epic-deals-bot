@@ -1,7 +1,7 @@
 import { fetchSteamDeals } from '#sources/steam.source.ts'
 import { fetchSteamAppDetails } from '#sources/steamDetails.source.ts'
 import { replaceSteamDeals, saveSteamAppDetails } from '#db/steam.db.ts'
-import { CURRENCY_TO_CC, LANGUAGES } from '#types/settings/settings.type.ts'
+import { CURRENCY_TO_CC, LANGUAGES, LANGUAGE_TO_STEAM_LANG } from '#types/settings/settings.type.ts'
 import { sleep } from '#utils/sleep.util.ts'
 import { logger } from '#logger/index.ts'
 
@@ -23,11 +23,12 @@ export async function updateSteamDeals(): Promise<UpdateResult[]> {
 
   for (const cc of CCS) {
     for (const lang of LANGUAGES) {
+      const steamLang = LANGUAGE_TO_STEAM_LANG[lang]
       const startKey = Date.now()
 
       logger.debug(`fetching deals for cc=${cc} lang=${lang}`, { module: 'steam.task', cc, lang })
 
-      const deals = await fetchSteamDeals(cc, lang)
+      const deals = await fetchSteamDeals(cc, steamLang)
       const diff = replaceSteamDeals(cc, lang, deals)
 
       logger.debug(`saved ${deals.length} deals for cc=${cc} lang=${lang}`, {
@@ -42,7 +43,7 @@ export async function updateSteamDeals(): Promise<UpdateResult[]> {
 
       for (const deal of deals) {
         try {
-          const details = await fetchSteamAppDetails(deal.id, cc, lang)
+          const details = await fetchSteamAppDetails(deal.id, cc, steamLang)
 
           if (details) {
             saveSteamAppDetails(deal.id, cc, lang, details)
