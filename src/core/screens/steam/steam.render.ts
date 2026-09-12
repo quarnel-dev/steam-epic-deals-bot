@@ -62,7 +62,7 @@ export async function renderSteamCard(ctx: AppContext, filter: SteamFilter = 'to
     const currentDeal = deals[pageIndex] ?? deals[0]
     const details = getSteamAppDetails(currentDeal.id, cc)
 
-    const caption = componentSteamDealCard(currentDeal, details)
+    const caption = componentSteamDealCard(ctx.t, currentDeal, details)
     const gameUrl = `https://store.steampowered.com/app/${currentDeal.id}`
     const replyMarkup = getSteamPaginationKeyboard(ctx.t, filter, pageIndex, deals.length, gameUrl)
 
