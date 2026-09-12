@@ -1,10 +1,10 @@
 import type { Context } from 'grammy'
 
-import { setCurrency, setLanguage, setNotification } from '#db/index.ts'
+import { setCurrency, setLanguage, setNotification } from '#db/users.db.ts'
 import type { Currency, Language } from '#types/settings/settings.type.ts'
 import { CURRENCIES, LANGUAGES } from '#types/settings/settings.type.ts'
 import { renderCurrencyPicker, renderLanguagePicker, renderSettings } from '#core/screens/settings/settings.render.ts'
-import { getUserSettings } from '#db/index.ts'
+import { getUserSettings } from '#db/users.db.ts'
 
 export async function handleSettingsCallback(ctx: Context) {
   const queryData = ctx.callbackQuery?.data
@@ -25,7 +25,7 @@ export async function handleSettingsCallback(ctx: Context) {
   }
 
   if (queryData === 'settings_currency') {
-    await renderCurrencyPicker(ctx) 
+    await renderCurrencyPicker(ctx)
     return
   }
 

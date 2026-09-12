@@ -8,7 +8,7 @@ import { componentSteamDealCard } from '#core/components/steam.component.ts'
 import { t } from '#locales/index.ts'
 import { getSteamKeyboard, getSteamPaginationKeyboard } from './steam.keyboard.ts'
 import { fetchSteamAppDetails } from '#sources/steamDetails.source.ts'
-import { getUserSettings } from '#db/index.ts'
+import { getUserSettings } from '#db/users.db.ts'
 import { CURRENCY_TO_CC } from '#types/settings/settings.type.ts'
 
 const STEAM_FALLBACK_IMAGE = 'https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016'

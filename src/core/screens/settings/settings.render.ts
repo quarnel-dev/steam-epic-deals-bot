@@ -1,6 +1,6 @@
 import type { Context } from 'grammy'
 
-import { getUserSettings } from '#db/index.ts'
+import { getUserSettings } from '#db/users.db.ts'
 import { t } from '#locales/index.ts'
 import { getCurrencyKeyboard, getLanguageKeyboard, getSettingsKeyboard } from './settings.keyboard.ts'
 import type { SettingsOptions } from './settings.type.ts'
@@ -41,7 +41,7 @@ export async function renderLanguagePicker(ctx: Context) {
 }
 
 export async function renderCurrencyPicker(ctx: Context) {
-    const settings = getUserSettings(ctx.from!.id)
+  const settings = getUserSettings(ctx.from!.id)
 
   await ctx.editMessageText(t('settings.labels.currency'), {
     parse_mode: 'HTML',
