@@ -1,7 +1,7 @@
-import type { Context } from 'grammy'
+import type { AppContext } from '#types/context.type.ts'
 
 import { renderStart } from './start.render.ts'
 
-export async function startCommand(ctx: Context) {
+export async function startCommand(ctx: AppContext) {
   renderStart(ctx)
 }

@@ -1,4 +1,5 @@
 import type { Bot } from 'grammy'
+import type { AppContext } from '#types/context.type.ts'
 import cron from 'node-cron'
 
 import { config } from './config.ts'
@@ -27,7 +28,7 @@ async function primeCache(): Promise<void> {
   }
 }
 
-async function runDailyUpdate(bot: Bot): Promise<void> {
+async function runDailyUpdate(bot: Bot<AppContext>): Promise<void> {
   const start = Date.now()
   try {
     logger.info('running daily steam deals update...', { module: 'cron' })
@@ -44,7 +45,7 @@ async function runDailyUpdate(bot: Bot): Promise<void> {
   }
 }
 
-export function startCronJobs(bot: Bot): void {
+export function startCronJobs(bot: Bot<AppContext>): void {
   logger.debug('registering cron schedule', { module: 'cron', schedule: DAILY_SCHEDULE })
 
   primeCache()
