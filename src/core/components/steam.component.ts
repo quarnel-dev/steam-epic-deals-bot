@@ -1,5 +1,5 @@
+import type { TFn } from '#locales/index.ts'
 import type { SteamAppDetails, SteamFeaturedItem } from '#types/sources/steam.type.ts'
-import { t } from '#locales/index.ts'
 
 const DIVIDER = '━━━━━━━━━━━━━━━━━━'
 
@@ -7,7 +7,7 @@ function formatPrice(cents: number, currency: string): string {
   return `${(cents / 100).toFixed(2)} ${currency}`
 }
 
-function formatPlatforms(details?: SteamAppDetails | null): string {
+function formatPlatforms(t: TFn, details?: SteamAppDetails | null): string {
   if (!details?.platforms) return ''
 
   const platforms: string[] = []
@@ -18,7 +18,7 @@ function formatPlatforms(details?: SteamAppDetails | null): string {
   return platforms.join(' / ')
 }
 
-export function componentSteamDealCard(deal: SteamFeaturedItem, details?: SteamAppDetails | null): string {
+export function componentSteamDealCard(t: TFn, deal: SteamFeaturedItem, details?: SteamAppDetails | null): string {
   const savings = (deal.original_price ?? deal.final_price) - deal.final_price
   const lines: string[] = []
 
@@ -53,7 +53,7 @@ export function componentSteamDealCard(deal: SteamFeaturedItem, details?: SteamA
     details?.developers?.length ||
     details?.metacritic?.score ||
     details?.recommendations?.total ||
-    formatPlatforms(details)
+    formatPlatforms(t, details)
 
   if (hasDetails) {
     lines.push('')
@@ -77,7 +77,7 @@ export function componentSteamDealCard(deal: SteamFeaturedItem, details?: SteamA
     }
     if (meta.length) lines.push(meta.join('  •  '))
 
-    const platforms = formatPlatforms(details)
+    const platforms = formatPlatforms(t, details)
     if (platforms) lines.push(t('steam.deal.platforms', { platforms }))
   }
 
