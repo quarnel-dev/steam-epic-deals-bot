@@ -2,10 +2,24 @@ import { createBot } from '#core/bot.core.ts'
 import { startCronJobs } from './cron.ts'
 import { config } from './config.ts'
 
-console.log('[ main ] starting server...')
-const bot = createBot(config.botToken)
+async function main() {
+  console.log('[ main ] starting server...')
 
-startCronJobs(bot)
+  const bot = createBot(config.botToken)
 
-bot.start()
-console.log('[ bot ] bot started')
+  await bot.init()
+  console.log(`[ bot ] @${bot.botInfo.username} initialized`)
+
+  startCronJobs(bot)
+
+  await bot.start({
+    onStart: (botInfo) => {
+      console.log(`[ bot ] @${botInfo.username} polling started`)
+    },
+  })
+}
+
+main().catch((err) => {
+  console.error('[ main ] fatal error:', err)
+  process.exit(1)
+})
