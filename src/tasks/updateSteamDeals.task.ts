@@ -1,7 +1,7 @@
 import { fetchSteamDeals } from '#sources/steam.source.ts'
 import { fetchSteamAppDetails } from '#sources/steamDetails.source.ts'
 import { replaceSteamDeals, saveSteamAppDetails } from '#db/steam.db.ts'
-import { CURRENCY_TO_CC } from '#types/settings/settings.type.ts'
+import { CURRENCY_TO_CC, LANGUAGES } from '#types/settings/settings.type.ts'
 import { sleep } from '#utils/sleep.util.ts'
 import { logger } from '#logger/index.ts'
 
@@ -15,68 +15,81 @@ export async function updateSteamDeals(): Promise<UpdateResult[]> {
   const start = Date.now()
   const results: UpdateResult[] = []
 
-  logger.info(`updating steam deals for ${CCS.length} regions`, { module: 'steam.task', regions: CCS })
+  logger.info(`updating steam deals for ${CCS.length} regions × ${LANGUAGES.length} languages`, {
+    module: 'steam.task',
+    regions: CCS,
+    languages: LANGUAGES,
+  })
 
   for (const cc of CCS) {
-    const regionStart = Date.now()
+    for (const lang of LANGUAGES) {
+      const startKey = Date.now()
 
-    logger.debug(`fetching featured deals for cc=${cc}`, { module: 'steam.task', cc })
+      logger.debug(`fetching deals for cc=${cc} lang=${lang}`, { module: 'steam.task', cc, lang })
 
-    const deals = await fetchSteamDeals(cc)
-    const diff = replaceSteamDeals(cc, deals)
+      const deals = await fetchSteamDeals(cc, lang)
+      const diff = replaceSteamDeals(cc, lang, deals)
 
-    logger.debug(`saved ${deals.length} deals for cc=${cc}`, {
-      module: 'steam.task',
-      cc,
-      count: deals.length,
-      added: diff.added.length,
-      changed: diff.changed.length,
-      removed: diff.removed.length,
-    })
+      logger.debug(`saved ${deals.length} deals for cc=${cc} lang=${lang}`, {
+        module: 'steam.task',
+        cc,
+        lang,
+        count: deals.length,
+        added: diff.added.length,
+        changed: diff.changed.length,
+        removed: diff.removed.length,
+      })
 
-    for (const deal of deals) {
-      try {
-        const details = await fetchSteamAppDetails(deal.id, cc)
+      for (const deal of deals) {
+        try {
+          const details = await fetchSteamAppDetails(deal.id, cc, lang)
 
-        if (details) {
-          saveSteamAppDetails(deal.id, cc, details)
-          logger.debug(`saved details for ${deal.id} (cc=${cc})`, {
+          if (details) {
+            saveSteamAppDetails(deal.id, cc, lang, details)
+            logger.debug(`saved details for ${deal.id} (cc=${cc}, lang=${lang})`, {
+              module: 'steam.task',
+              cc,
+              lang,
+              appId: deal.id,
+            })
+          } else {
+            logger.warn(`no details returned for ${deal.id} (cc=${cc}, lang=${lang})`, {
+              module: 'steam.task',
+              cc,
+              lang,
+              appId: deal.id,
+            })
+          }
+        } catch (err) {
+          logger.error(`failed to fetch details for ${deal.id} (cc=${cc}, lang=${lang})`, {
             module: 'steam.task',
             cc,
+            lang,
             appId: deal.id,
-          })
-        } else {
-          logger.warn(`no details returned for ${deal.id} (cc=${cc})`, {
-            module: 'steam.task',
-            cc,
-            appId: deal.id,
+            err,
           })
         }
-      } catch (err) {
-        logger.error(`failed to fetch details for ${deal.id} (cc=${cc})`, {
-          module: 'steam.task',
-          cc,
-          appId: deal.id,
-          err,
-        })
+
+        await sleep(APP_DETAILS_DELAY_MS)
       }
 
-      await sleep(APP_DETAILS_DELAY_MS)
+      logger.info(`region cc=${cc} lang=${lang} updated`, {
+        module: 'steam.task',
+        cc,
+        lang,
+        total: deals.length,
+        durationMs: Date.now() - startKey,
+      })
+
+      results.push({ cc, lang, total: deals.length, diff })
     }
-
-    logger.info(`region cc=${cc} updated`, {
-      module: 'steam.task',
-      cc,
-      total: deals.length,
-      durationMs: Date.now() - regionStart,
-    })
-
-    results.push({ cc, total: deals.length, diff })
   }
 
   logger.info('steam deals update finished', {
     module: 'steam.task',
     regions: CCS.length,
+    languages: LANGUAGES.length,
+    totalRuns: CCS.length * LANGUAGES.length,
     durationMs: Date.now() - start,
   })
 
