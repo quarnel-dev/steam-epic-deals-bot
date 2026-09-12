@@ -11,6 +11,7 @@ import { logger } from '#logger/index.ts'
 import type { UpdateResult } from '#types/tasks/steamDeals.type.ts'
 import type { BroadcastResult } from '#types/tasks/steamBroadcast.type.ts'
 import type { AppContext } from '#types/context.type.ts'
+import { CURRENCY_TO_CC } from '#types/settings/settings.type.ts'
 
 const MESSAGE_DELAY_MIN_MS = 10000
 const MESSAGE_DELAY_MAX_MS = 20000
@@ -68,6 +69,7 @@ async function sendUserMessages(bot: Bot<AppContext>, userId: number, results: U
     const settings = getUserSettings(userId)
     const t = createT(settings.language)
     const lang = settings.language
+    const cc = CURRENCY_TO_CC[settings.currency]
 
     await bot.api.sendMessage(userId, buildSummaryMessage(t, results), { parse_mode: 'HTML' })
     await sleep(randomDelay())
@@ -75,9 +77,9 @@ async function sendUserMessages(bot: Bot<AppContext>, userId: number, results: U
     const top = pickTopDeal(results)
 
     if (top) {
-      const deal = getSteamDealsAsFeatured(top.cc, lang).find((d) => d.id === top.appId)
+      const deal = getSteamDealsAsFeatured(cc, lang).find((d) => d.id === top.appId)
       if (deal) {
-        const details = getSteamAppDetails(deal.id, top.cc, lang)
+        const details = getSteamAppDetails(deal.id, cc, lang)
         const caption = componentSteamDealCard(t, deal, details)
         const gameUrl = `https://store.steampowered.com/app/${deal.id}`
         const keyboard = getSteamOpenKeyboard(t, gameUrl)
