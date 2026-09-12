@@ -45,8 +45,6 @@ export interface Locale {
     }
     update: {
       summary: string
-      topDeal: string
-      topDealChanged: string
       removed: string
     }
   }

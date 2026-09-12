@@ -49,8 +49,6 @@ export const en = {
     update: {
       summary:
         '🔄 <b>Steam deals updated</b>\n\nBefore: {before}\nAfter: {after}\n\n🆕 New: {added}\n📉 Changed: {changed}\n🗑 Removed: {removed}',
-      topDeal: '🔥 Top discount: <b>{name}</b> — {discount}% off',
-      topDealChanged: '📉 Top changed discount: {discount}% off',
       removed: '🗑 {count} deals are no longer on sale',
     },
   },

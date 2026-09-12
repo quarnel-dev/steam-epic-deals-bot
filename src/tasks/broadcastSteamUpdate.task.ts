@@ -1,16 +1,21 @@
 import type { Bot } from 'grammy'
 
-import { getPendingSteamChanges, markSteamChangesNotified } from '#db/steam.db.ts'
+import { getPendingSteamChanges, markSteamChangesNotified, getSteamAppDetails, getSteamDealsAsFeatured } from '#db/steam.db.ts'
 import { getUserIdsForChannel } from '#db/users.db.ts'
+import { componentSteamDealCard } from '#core/components/steam.component.ts'
+import { getSteamOpenKeyboard } from '#core/screens/steam/steam.keyboard.ts'
 import { t } from '#locales/index.ts'
 import { sleep } from '#utils/sleep.util.ts'
 
+import type { SteamFeaturedItem } from '#types/sources/steam.type.ts'
 import type { UpdateResult } from '#types/tasks/steamDeals.type.ts'
 import type { BroadcastResult } from '#types/tasks/steamBroadcast.type.ts'
 
 const MESSAGE_DELAY_MIN_MS = 10000
 const MESSAGE_DELAY_MAX_MS = 20000
 const USER_DELAY_MS = 75
+
+const STEAM_FALLBACK_IMAGE = 'https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016'
 
 function randomDelay(): number {
   const range = MESSAGE_DELAY_MAX_MS - MESSAGE_DELAY_MIN_MS
@@ -24,34 +29,7 @@ function buildSummaryMessage(results: UpdateResult[]): string {
   const changed = results.reduce((sum, r) => sum + r.diff.changed.length, 0)
   const removed = results.reduce((sum, r) => sum + r.diff.removed.length, 0)
 
-  return t('steam.update.summary', {
-    before: totalBefore,
-    after: totalAfter,
-    added,
-    changed,
-    removed,
-  })
-}
-
-function buildTopDealMessage(results: UpdateResult[]): string | null {
-  const allNew = results.flatMap((r) => r.diff.added)
-
-  if (allNew.length === 0) {
-    const allChanged = results.flatMap((r) => r.diff.changed).map((c) => ({ name: '', discount_percent: c.new_discount }))
-
-    if (allChanged.length === 0) return null
-
-    const top = allChanged.sort((a, b) => b.discount_percent - a.discount_percent)[0]
-    return t('steam.update.topDealChanged', {
-      discount: top.discount_percent,
-    })
-  }
-
-  const top = allNew.sort((a, b) => b.discount_percent - a.discount_percent)[0]
-  return t('steam.update.topDeal', {
-    name: top.name,
-    discount: top.discount_percent,
-  })
+  return t('steam.update.summary', { before: totalBefore, after: totalAfter, added, changed, removed })
 }
 
 function buildRemovedMessage(results: UpdateResult[]): string | null {
@@ -61,24 +39,52 @@ function buildRemovedMessage(results: UpdateResult[]): string | null {
   return t('steam.update.removed', { count: removed.length })
 }
 
+function pickTopDeal(results: UpdateResult[]): { deal: SteamFeaturedItem; cc: string } | null {
+  const added = results.flatMap((r) => r.diff.added.map((row) => ({ row, cc: r.cc })))
+
+  if (added.length > 0) {
+    const top = [...added].sort((a, b) => b.row.discount_percent - a.row.discount_percent)[0]
+    const deal = getSteamDealsAsFeatured(top.cc).find((d) => d.id === top.row.app_id)
+    if (deal) return { deal, cc: top.cc }
+  }
+
+  const changed = results.flatMap((r) => r.diff.changed.map((c) => ({ c, cc: r.cc })))
+
+  if (changed.length > 0) {
+    const top = [...changed].sort((a, b) => b.c.new_discount - a.c.new_discount)[0]
+    const deal = getSteamDealsAsFeatured(top.cc).find((d) => d.id === top.c.app_id)
+    if (deal) return { deal, cc: top.cc }
+  }
+
+  return null
+}
+
 async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[]): Promise<boolean> {
-  const messages: string[] = []
-
-  messages.push(buildSummaryMessage(results))
-
-  const topDeal = buildTopDealMessage(results)
-  if (topDeal) messages.push(topDeal)
-
-  const removed = buildRemovedMessage(results)
-  if (removed) messages.push(removed)
-
   try {
-    for (let i = 0; i < messages.length; i++) {
-      await bot.api.sendMessage(userId, messages[i], { parse_mode: 'HTML' })
+    await bot.api.sendMessage(userId, buildSummaryMessage(results), { parse_mode: 'HTML' })
+    await sleep(randomDelay())
 
-      if (i < messages.length - 1) {
-        await sleep(randomDelay())
-      }
+    const top = pickTopDeal(results)
+
+    if (top) {
+      const details = getSteamAppDetails(top.deal.id, top.cc)
+      const caption = componentSteamDealCard(top.deal, details)
+      const gameUrl = `https://store.steampowered.com/app/${top.deal.id}`
+      const keyboard = getSteamOpenKeyboard(gameUrl)
+      const imageUrl = top.deal.header_image || STEAM_FALLBACK_IMAGE
+
+      await bot.api.sendPhoto(userId, imageUrl, {
+        caption,
+        parse_mode: 'HTML',
+        reply_markup: keyboard,
+      })
+
+      await sleep(randomDelay())
+    }
+
+    const removed = buildRemovedMessage(results)
+    if (removed) {
+      await bot.api.sendMessage(userId, removed, { parse_mode: 'HTML' })
     }
 
     return true
