@@ -21,3 +21,8 @@ export const CURRENCY_TO_CC: Record<Currency, string> = {
   UAH: 'ua',
   KZT: 'kz',
 }
+
+export const LANGUAGE_TO_STEAM_LANG: Record<Language, string> = {
+  en: 'english',
+  ru: 'russian',
+}
