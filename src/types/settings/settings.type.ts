@@ -1,7 +1,7 @@
 export const CURRENCIES = ['USD', 'EUR', 'RUB', 'UAH', 'KZT'] as const
 export type Currency = (typeof CURRENCIES)[number]
 
-export const LANGUAGES = ['en'] as const
+export const LANGUAGES = ['en', 'ru'] as const
 export type Language = (typeof LANGUAGES)[number]
 
 export interface UserSettings {

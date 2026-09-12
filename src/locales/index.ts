@@ -1,9 +1,10 @@
 import { en } from './en.locale.ts'
+import { ru } from './ru.locale.ts'
 
 import type { Locale, LocalKey } from '#types/locales/locale.type.ts'
 import type { Language } from '#types/settings/settings.type.ts'
 
-export const locales = { en } satisfies Record<string, Locale>
+export const locales = { en, ru } satisfies Record<string, Locale>
 
 function lookup(lang: Language, key: LocalKey): string {
   const dict = (locales as Record<string, Locale>)[lang]
