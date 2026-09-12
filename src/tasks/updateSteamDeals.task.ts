@@ -2,6 +2,7 @@ import { fetchSteamDeals } from '#sources/steam.source.ts'
 import { fetchSteamAppDetails } from '#sources/steamDetails.source.ts'
 import { replaceSteamDeals, saveSteamAppDetails } from '#db/steam.db.ts'
 import { CURRENCY_TO_CC } from '#types/settings/settings.type.ts'
+import { sleep } from '#utils/sleep.util.ts'
 
 import type { UpdateResult } from '#types/tasks/steamDeals.type.ts'
 
@@ -9,9 +10,6 @@ const APP_DETAILS_DELAY_MS = 300
 
 const CCS = Object.values(CURRENCY_TO_CC)
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 export async function updateSteamDeals(): Promise<UpdateResult[]> {
   const results: UpdateResult[] = []
