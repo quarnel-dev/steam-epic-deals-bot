@@ -18,7 +18,7 @@ function cacheKey(appid: number, cc: string, lang: string): CacheKey {
 export async function fetchSteamAppDetails(
   appid: number,
   cc: string = 'us',
-  lang: string = 'en'
+  lang: string = 'english'
 ): Promise<SteamAppDetails | null> {
   const key = cacheKey(appid, cc, lang)
   const cached = cache.get(key)

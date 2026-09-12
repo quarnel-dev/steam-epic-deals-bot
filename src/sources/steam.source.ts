@@ -3,7 +3,7 @@ import { logger } from '#logger/index.ts'
 
 const STEAM_API_URL = 'https://store.steampowered.com/api/featuredcategories'
 
-export async function fetchSteamDeals(cc: string = 'us', lang: string = 'en'): Promise<SteamFeaturedItem[]> {
+export async function fetchSteamDeals(cc: string = 'us', lang: string = 'english'): Promise<SteamFeaturedItem[]> {
   const url = `${STEAM_API_URL}?cc=${cc}&l=${lang}`
 
   logger.debug('fetching featured categories', { module: 'steam.source', cc, lang })
