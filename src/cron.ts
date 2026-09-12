@@ -1,11 +1,13 @@
 import type { Bot } from 'grammy'
 import cron from 'node-cron'
 
+import { config } from './config.ts'
+
 import { getPendingSteamChanges, markSteamChangesNotified } from '#db/steam.db.ts'
 import { updateSteamDeals } from '#tasks/updateSteamDeals.task.ts'
 import { broadcastSteamUpdate } from '#tasks/broadcastSteamUpdate.task.ts'
 
-const DAILY_SCHEDULE = '0 12 * * *'
+const DAILY_SCHEDULE = config.cronSchedule
 const TIMEZONE = 'UTC'
 
 async function primeCache(): Promise<void> {
