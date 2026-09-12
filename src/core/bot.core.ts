@@ -6,11 +6,14 @@ import { handleMenuCallback } from './handlers/menu.handler.ts'
 import { handleSteamCallback } from './handlers/steam.handler.ts'
 import { handleSettingsCallback } from './handlers/settings.handler.ts'
 import { ensureUser } from './middlewares/ensureUser.middleware.ts'
+import { contextMiddleware } from './middlewares/context.middleware.ts'
 
 import { logger } from '#logger/index.ts'
 
+import type { AppContext } from '#types/context.type.ts'
+
 export function createBot(token: string) {
-  const bot = new Bot(token)
+  const bot = new Bot<AppContext>(token)
 
   bot.catch((err) => {
     const ctx = err.ctx
@@ -22,6 +25,7 @@ export function createBot(token: string) {
   })
 
   bot.use(ensureUser)
+  bot.use(contextMiddleware())
 
   bot.command('start', startCommand)
   bot.command('menu', menuCommand)
