@@ -17,7 +17,7 @@ db.exec(`
 `)
 
 const selectUser = db.prepare('SELECT * FROM user_settings WHERE user_id = ?')
-const insertUser = db.prepare('INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)')
+const insertUser = db.prepare('INSERT OR IGNORE INTO user_settings (user_id, language) VALUES (?, ?)')
 const updateLanguage = db.prepare('UPDATE user_settings SET language = ?, updated_at = unixepoch() WHERE user_id = ?')
 const updateCurrency = db.prepare('UPDATE user_settings SET currency = ?, updated_at = unixepoch() WHERE user_id = ?')
 const updateEpicNotifications = db.prepare(
@@ -29,11 +29,11 @@ const updateSteamNotifications = db.prepare(
 const selectSteamSubscribers = db.prepare('SELECT user_id FROM user_settings WHERE steam_notifications = 1')
 const selectEpicSubscribers = db.prepare('SELECT user_id FROM user_settings WHERE epic_notifications = 1')
 
-export function getUserSettings(userId: number): UserSettings {
+export function getUserSettings(userId: number, initialLanguage: Language = 'en'): UserSettings {
   const existing = selectUser.get(userId) as UserSettings | undefined
   if (existing) return existing
 
-  insertUser.run(userId)
+  insertUser.run(userId, initialLanguage)
   return selectUser.get(userId) as UserSettings
 }
 
