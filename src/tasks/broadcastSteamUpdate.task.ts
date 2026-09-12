@@ -6,6 +6,7 @@ import { componentSteamDealCard } from '#core/components/steam.component.ts'
 import { getSteamOpenKeyboard } from '#core/screens/steam/steam.keyboard.ts'
 import { t } from '#locales/index.ts'
 import { sleep } from '#utils/sleep.util.ts'
+import { logger } from '#logger/index.ts'
 
 import type { SteamFeaturedItem } from '#types/sources/steam.type.ts'
 import type { UpdateResult } from '#types/tasks/steamDeals.type.ts'
@@ -67,6 +68,13 @@ async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[
     const top = pickTopDeal(results)
 
     if (top) {
+      logger.debug(`sending top deal card to user`, {
+        module: 'broadcast.task',
+        userId,
+        appId: top.deal.id,
+        cc: top.cc,
+      })
+
       const details = getSteamAppDetails(top.deal.id, top.cc)
       const caption = componentSteamDealCard(top.deal, details)
       const gameUrl = `https://store.steampowered.com/app/${top.deal.id}`
@@ -89,20 +97,34 @@ async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[
 
     return true
   } catch (err) {
-    console.error(`Failed to notify user ${userId}:`, err)
+    logger.error('failed to notify user', { module: 'broadcast.task', userId, err })
     return false
   }
 }
 
 export async function broadcastSteamUpdate(bot: Bot, results: UpdateResult[]): Promise<BroadcastResult> {
+  const start = Date.now()
   const pending = getPendingSteamChanges()
   const result: BroadcastResult = { sent: 0, failed: 0, skipped: 0 }
 
   if (pending.length === 0) {
+    logger.debug('no pending changes, skipping broadcast', { module: 'broadcast.task' })
     return result
   }
 
   const userIds = getUserIdsForChannel('steam')
+
+  if (userIds.length === 0) {
+    logger.warn('no steam subscribers to notify', { module: 'broadcast.task', changes: pending.length })
+    markSteamChangesNotified(pending.map((c) => c.id))
+    return result
+  }
+
+  logger.info(`broadcasting steam update to ${userIds.length} users`, {
+    module: 'broadcast.task',
+    users: userIds.length,
+    changes: pending.length,
+  })
 
   for (const userId of userIds) {
     const ok = await sendUserMessages(bot, userId, results)
@@ -117,6 +139,13 @@ export async function broadcastSteamUpdate(bot: Bot, results: UpdateResult[]): P
   }
 
   markSteamChangesNotified(pending.map((c) => c.id))
+
+  logger.info('broadcast finished', {
+    module: 'broadcast.task',
+    sent: result.sent,
+    failed: result.failed,
+    durationMs: Date.now() - start,
+  })
 
   return result
 }
