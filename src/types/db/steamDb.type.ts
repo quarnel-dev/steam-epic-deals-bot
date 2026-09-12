@@ -1,6 +1,7 @@
 export interface SteamDealRow {
   app_id: number
   cc: string
+  lang: string
   name: string
   discount_percent: number
   original_price: number | null
@@ -14,6 +15,7 @@ export interface SteamDealRow {
 export interface SteamAppDetailsRow {
   app_id: number
   cc: string
+  lang: string
   short_description: string | null
   developers: string | null
   genres: string | null
