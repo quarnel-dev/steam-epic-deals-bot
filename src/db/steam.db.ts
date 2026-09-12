@@ -208,3 +208,17 @@ export function markSteamChangesNotified(ids: number[]): void {
   })
   tx(ids)
 }
+
+export function getSteamDealsAsFeatured(cc: string): SteamFeaturedItem[] {
+  return getSteamDeals(cc).map((row) => ({
+    id: row.app_id,
+    name: row.name,
+    discount_percent: row.discount_percent,
+    original_price: row.original_price ?? 0,
+    final_price: row.final_price,
+    currency: row.currency,
+    header_image: row.header_image,
+    discount_expiration: row.discount_expiration ?? undefined,
+    discounted: true,
+  }))
+}
