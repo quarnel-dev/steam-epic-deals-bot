@@ -1,10 +1,10 @@
 import type { Bot } from 'grammy'
 
 import { getPendingSteamChanges, markSteamChangesNotified, getSteamAppDetails, getSteamDealsAsFeatured } from '#db/steam.db.ts'
-import { getUserIdsForChannel } from '#db/users.db.ts'
+import { getUserIdsForChannel, getUserSettings } from '#db/users.db.ts'
 import { componentSteamDealCard } from '#core/components/steam.component.ts'
 import { getSteamOpenKeyboard } from '#core/screens/steam/steam.keyboard.ts'
-import { t } from '#locales/index.ts'
+import { createT, type TFn } from '#locales/index.ts'
 import { sleep } from '#utils/sleep.util.ts'
 import { logger } from '#logger/index.ts'
 
@@ -23,7 +23,7 @@ function randomDelay(): number {
   return MESSAGE_DELAY_MIN_MS + Math.floor(Math.random() * range)
 }
 
-function buildSummaryMessage(results: UpdateResult[]): string {
+function buildSummaryMessage(t: TFn, results: UpdateResult[]): string {
   const totalBefore = results.reduce((sum, r) => sum + r.total - r.diff.added.length + r.diff.removed.length, 0)
   const totalAfter = results.reduce((sum, r) => sum + r.total, 0)
   const added = results.reduce((sum, r) => sum + r.diff.added.length, 0)
@@ -33,7 +33,7 @@ function buildSummaryMessage(results: UpdateResult[]): string {
   return t('steam.update.summary', { before: totalBefore, after: totalAfter, added, changed, removed })
 }
 
-function buildRemovedMessage(results: UpdateResult[]): string | null {
+function buildRemovedMessage(t: TFn, results: UpdateResult[]): string | null {
   const removed = results.flatMap((r) => r.diff.removed)
   if (removed.length === 0) return null
 
@@ -62,7 +62,10 @@ function pickTopDeal(results: UpdateResult[]): { deal: SteamFeaturedItem; cc: st
 
 async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[]): Promise<boolean> {
   try {
-    await bot.api.sendMessage(userId, buildSummaryMessage(results), { parse_mode: 'HTML' })
+    const settings = getUserSettings(userId)
+    const t = createT(settings.language)
+
+    await bot.api.sendMessage(userId, buildSummaryMessage(t, results), { parse_mode: 'HTML' })
     await sleep(randomDelay())
 
     const top = pickTopDeal(results)
@@ -76,9 +79,9 @@ async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[
       })
 
       const details = getSteamAppDetails(top.deal.id, top.cc)
-      const caption = componentSteamDealCard(top.deal, details)
+      const caption = componentSteamDealCard(t, top.deal, details)
       const gameUrl = `https://store.steampowered.com/app/${top.deal.id}`
-      const keyboard = getSteamOpenKeyboard(gameUrl)
+      const keyboard = getSteamOpenKeyboard(t, gameUrl)
       const imageUrl = top.deal.header_image || STEAM_FALLBACK_IMAGE
 
       await bot.api.sendPhoto(userId, imageUrl, {
@@ -90,7 +93,7 @@ async function sendUserMessages(bot: Bot, userId: number, results: UpdateResult[
       await sleep(randomDelay())
     }
 
-    const removed = buildRemovedMessage(results)
+    const removed = buildRemovedMessage(t, results)
     if (removed) {
       await bot.api.sendMessage(userId, removed, { parse_mode: 'HTML' })
     }
