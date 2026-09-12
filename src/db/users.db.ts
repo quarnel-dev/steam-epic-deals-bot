@@ -26,6 +26,8 @@ const updateEpicNotifications = db.prepare(
 const updateSteamNotifications = db.prepare(
   'UPDATE user_settings SET steam_notifications = ?, updated_at = unixepoch() WHERE user_id = ?'
 )
+const selectSteamSubscribers = db.prepare('SELECT user_id FROM user_settings WHERE steam_notifications = 1')
+const selectEpicSubscribers = db.prepare('SELECT user_id FROM user_settings WHERE epic_notifications = 1')
 
 export function getUserSettings(userId: number): UserSettings {
   const existing = selectUser.get(userId) as UserSettings | undefined
@@ -46,4 +48,11 @@ export function setCurrency(userId: number, currency: Currency): void {
 export function setNotification(userId: number, channel: 'epic' | 'steam', enabled: boolean): void {
   const stmt = channel === 'epic' ? updateEpicNotifications : updateSteamNotifications
   stmt.run(enabled ? 1 : 0, userId)
+}
+
+export function getUserIdsForChannel(channel: 'epic' | 'steam'): number[] {
+  const stmt = channel === 'epic' ? selectEpicSubscribers : selectSteamSubscribers
+  const rows = stmt.all() as { user_id: number }[]
+
+  return rows.map((r) => r.user_id)
 }
