@@ -13,7 +13,8 @@
     "#sources/*": "./src/sources/*",
     "#db/*": "./src/db/*",
     "#utils/*": "./src/utils/*",
-    "#tasks/*": "./src/tasks/*"
+    "#tasks/*": "./src/tasks/*",
+    "#logger/*": "./src/logger/*"
   },
   "author": "Quarnel",
   "license": "MIT",
