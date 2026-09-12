@@ -1,7 +1,6 @@
-import type { Context } from 'grammy'
+import type { AppContext } from '#types/context.type.ts'
 import { InputMediaBuilder } from 'grammy'
 
-import { t } from '#locales/index.ts'
 import { logger } from '#logger/index.ts'
 
 import { componentSteamDealCard } from '#core/components/steam.component.ts'
@@ -15,9 +14,9 @@ import type { SteamFilter } from '#types/sources/steam.type.ts'
 
 const STEAM_FALLBACK_IMAGE = 'https://store.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016'
 
-export async function renderSteamMenu(ctx: Context) {
-  const text = `${t('steam.title')}\n\n${t('steam.description')}`
-  const keyboard = getSteamKeyboard()
+export async function renderSteamMenu(ctx: AppContext) {
+  const text = `${ctx.t('steam.title')}\n\n${ctx.t('steam.description')}`
+  const keyboard = getSteamKeyboard(ctx.t)
 
   if (ctx.callbackQuery) {
     if (ctx.callbackQuery.message?.photo) {
@@ -40,7 +39,7 @@ export async function renderSteamMenu(ctx: Context) {
   }
 }
 
-export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top', pageIndex: number = 0) {
+export async function renderSteamCard(ctx: AppContext, filter: SteamFilter = 'top', pageIndex: number = 0) {
   try {
     const userId = ctx.from!.id
     const settings = getUserSettings(userId)
@@ -54,8 +53,8 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
 
     if (deals.length === 0) {
       logger.debug('no deals to render', { module: 'steam.render', userId, cc, filter })
-      await ctx.editMessageText(t('deals.empty'), {
-        reply_markup: getSteamKeyboard(),
+      await ctx.editMessageText(ctx.t('deals.empty'), {
+        reply_markup: getSteamKeyboard(ctx.t),
       })
       return
     }
@@ -65,7 +64,7 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
 
     const caption = componentSteamDealCard(currentDeal, details)
     const gameUrl = `https://store.steampowered.com/app/${currentDeal.id}`
-    const replyMarkup = getSteamPaginationKeyboard(filter, pageIndex, deals.length, gameUrl)
+    const replyMarkup = getSteamPaginationKeyboard(ctx.t, filter, pageIndex, deals.length, gameUrl)
 
     const imageUrl = currentDeal.header_image || STEAM_FALLBACK_IMAGE
 
@@ -99,8 +98,8 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
     }
   } catch (err) {
     logger.error('failed to render steam card', { module: 'steam.render', err })
-    await ctx.reply(t('deals.error'), {
-      reply_markup: getSteamKeyboard(),
+    await ctx.reply(ctx.t('deals.error'), {
+      reply_markup: getSteamKeyboard(ctx.t),
     })
   }
 }

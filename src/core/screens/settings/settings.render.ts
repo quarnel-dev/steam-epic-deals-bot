@@ -1,7 +1,7 @@
-import type { Context } from 'grammy'
+import type { AppContext } from '#types/context.type.ts'
+
 
 import { getUserSettings } from '#db/users.db.ts'
-import { t } from '#locales/index.ts'
 import { getCurrencyKeyboard, getLanguageKeyboard, getSettingsKeyboard } from './settings.keyboard.ts'
 import type { SettingsOptions } from './settings.type.ts'
 
@@ -9,11 +9,11 @@ function buildText(header: string, body: string) {
   return `${header}\n\n${body}`
 }
 
-export async function renderSettings(ctx: Context, options: SettingsOptions = {}) {
+export async function renderSettings(ctx: AppContext, options: SettingsOptions = {}) {
   const userId = ctx.from!.id
   const settings = getUserSettings(userId)
 
-  const text = buildText(t('settings.title'), t('settings.description'))
+  const text = buildText(ctx.t('settings.title'), ctx.t('settings.description'))
 
   if (options.editMessage && ctx.callbackQuery && !ctx.callbackQuery.message?.photo) {
     await ctx.editMessageText(text, {
@@ -33,17 +33,17 @@ export async function renderSettings(ctx: Context, options: SettingsOptions = {}
   })
 }
 
-export async function renderLanguagePicker(ctx: Context) {
-  await ctx.editMessageText(t('settings.labels.language'), {
+export async function renderLanguagePicker(ctx: AppContext) {
+  await ctx.editMessageText(ctx.t('settings.labels.language'), {
     parse_mode: 'HTML',
     reply_markup: getLanguageKeyboard(),
   })
 }
 
-export async function renderCurrencyPicker(ctx: Context) {
+export async function renderCurrencyPicker(ctx: AppContext) {
   const settings = getUserSettings(ctx.from!.id)
 
-  await ctx.editMessageText(t('settings.labels.currency'), {
+  await ctx.editMessageText(ctx.t('settings.labels.currency'), {
     parse_mode: 'HTML',
     reply_markup: getCurrencyKeyboard(settings.currency),
   })

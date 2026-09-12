@@ -1,10 +1,9 @@
-import type { Context } from 'grammy'
+import type { AppContext } from '#types/context.type.ts'
 
-import { t } from '#locales/index.ts'
 import { renderMenu } from '../menu/menu.render.ts'
 
-export async function renderStart(ctx: Context) {
-  const text = `${t('start.welcome')}\n\n${t('start.description')}\n\n${t('start.instruction')}`
+export async function renderStart(ctx: AppContext) {
+  const text = `${ctx.t('start.welcome')}\n\n${ctx.t('start.description')}\n\n${ctx.t('start.instruction')}`
 
   await ctx.reply(text, {
     parse_mode: 'HTML',

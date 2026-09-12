@@ -1,9 +1,9 @@
 import { InlineKeyboard } from 'grammy'
-import { t } from '#locales/index.ts'
+import type { TFn } from '#locales/index.ts'
 
 import type { SteamFilter } from '#types/sources/steam.type.ts'
 
-export function getSteamKeyboard() {
+export function getSteamKeyboard(t: TFn) {
   return new InlineKeyboard()
     .text(t('steam.buttons.top'), 'steam_filter_top')
     .row()
@@ -14,7 +14,7 @@ export function getSteamKeyboard() {
     .text(t('buttons.back'), 'menu_back')
 }
 
-export function getSteamPaginationKeyboard(filter: SteamFilter, index: number, total: number, gameUrl: string) {
+export function getSteamPaginationKeyboard(t: TFn, filter: SteamFilter, index: number, total: number, gameUrl: string) {
   const kb = new InlineKeyboard()
 
   if (index > 0) {
@@ -38,6 +38,6 @@ export function getSteamPaginationKeyboard(filter: SteamFilter, index: number, t
   return kb
 }
 
-export function getSteamOpenKeyboard(gameUrl: string) {
+export function getSteamOpenKeyboard(t: TFn, gameUrl: string) {
   return new InlineKeyboard().url(t('steam.buttons.open'), gameUrl)
 }

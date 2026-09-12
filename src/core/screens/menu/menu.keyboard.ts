@@ -1,8 +1,8 @@
 import { InlineKeyboard } from 'grammy'
 
-import { t } from '#locales/index.ts'
+import type { TFn } from '#locales/index.ts'
 
-export function getMenuKeyboard() {
+export function getMenuKeyboard(t: TFn) {
   return new InlineKeyboard()
     .text(t('menu.buttons.steam'), 'menu_steam')
     .text(t('menu.buttons.epic'), 'menu_epic')
