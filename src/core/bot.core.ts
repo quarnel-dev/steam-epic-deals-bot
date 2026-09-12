@@ -9,6 +9,11 @@ import { ensureUser } from './middlewares/ensureUser.middleware.ts'
 export function createBot(token: string) {
   const bot = new Bot(token)
 
+  bot.catch((err) => {
+    const ctx = err.ctx
+    console.error(`Error while handing update ${ctx.update.update_id}: `, err.error)
+  })
+
   bot.use(ensureUser)
 
   bot.command('start', startCommand)
