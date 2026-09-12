@@ -1,9 +1,9 @@
-import type { Context } from 'grammy'
+import type { AppContext } from '#types/context.type.ts'
 import { renderMenu } from '#core/screens/menu/menu.render.ts'
 import { renderSteamMenu } from '#core/screens/steam/steam.render.ts'
 import { renderSettings } from '#core/screens/settings/settings.render.ts'
 
-export async function handleMenuCallback(ctx: Context) {
+export async function handleMenuCallback(ctx: AppContext) {
   const queryData = ctx.callbackQuery?.data
 
   await ctx.answerCallbackQuery()

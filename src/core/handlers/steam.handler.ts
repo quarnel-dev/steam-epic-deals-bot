@@ -1,9 +1,9 @@
-import type { Context } from 'grammy'
+import type { AppContext } from '#types/context.type.ts'
 
 import type { SteamFilter } from '#types/sources/steam.type.ts'
 import { renderSteamMenu, renderSteamCard } from '#core/screens/steam/steam.render.ts'
 
-export async function handleSteamCallback(ctx: Context) {
+export async function handleSteamCallback(ctx: AppContext) {
   const queryData = ctx.callbackQuery?.data
   if (!queryData) return
 
