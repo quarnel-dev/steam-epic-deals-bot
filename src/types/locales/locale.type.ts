@@ -43,6 +43,12 @@ export interface Locale {
       platformsMac: string
       platformsLinux: string
     }
+    update: {
+      summary: string
+      topDeal: string
+      topDealChanged: string
+      removed: string
+    }
   }
   settings: {
     title: string
@@ -64,6 +70,7 @@ export interface Locale {
       steamNotifications: string
     }
   }
+
   deals: {
     loading: string
     empty: string
