@@ -48,7 +48,11 @@ async function runDailyUpdate(bot: Bot<AppContext>): Promise<void> {
 export function startCronJobs(bot: Bot<AppContext>): void {
   logger.debug('registering cron schedule', { module: 'cron', schedule: DAILY_SCHEDULE })
 
-  primeCache()
+  if (config.primeCacheOnStart) {
+    primeCache()
+  } else {
+    logger.info('prime cache on start disabled', { module: 'cron' })
+  }
 
   cron.schedule(
     DAILY_SCHEDULE,
