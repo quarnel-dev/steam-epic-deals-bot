@@ -2,6 +2,7 @@ import type { Context } from 'grammy'
 import { InputMediaBuilder } from 'grammy'
 
 import { t } from '#locales/index.ts'
+import { logger } from '#logger/index.ts'
 
 import { componentSteamDealCard } from '#core/components/steam.component.ts'
 import { getSteamKeyboard, getSteamPaginationKeyboard } from './steam.keyboard.ts'
@@ -52,6 +53,7 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
     if (filter === 'd90') deals = deals.filter((d) => d.discount_percent >= 90)
 
     if (deals.length === 0) {
+      logger.debug('no deals to render', { module: 'steam.render', userId, cc, filter })
       await ctx.editMessageText(t('deals.empty'), {
         reply_markup: getSteamKeyboard(),
       })
@@ -66,6 +68,16 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
     const replyMarkup = getSteamPaginationKeyboard(filter, pageIndex, deals.length, gameUrl)
 
     const imageUrl = currentDeal.header_image || STEAM_FALLBACK_IMAGE
+
+    logger.debug('rendering steam card', {
+      module: 'steam.render',
+      userId,
+      cc,
+      filter,
+      appId: currentDeal.id,
+      page: `${pageIndex + 1}/${deals.length}`,
+      hasDetails: Boolean(details),
+    })
 
     if (ctx.callbackQuery?.message?.photo) {
       await ctx.editMessageMedia(
@@ -86,7 +98,7 @@ export async function renderSteamCard(ctx: Context, filter: SteamFilter = 'top',
       })
     }
   } catch (err) {
-    console.error('Error rendering Steam card:', err)
+    logger.error('failed to render steam card', { module: 'steam.render', err })
     await ctx.reply(t('deals.error'), {
       reply_markup: getSteamKeyboard(),
     })
