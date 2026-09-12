@@ -7,36 +7,46 @@ import { getPendingSteamChanges, markSteamChangesNotified } from '#db/steam.db.t
 import { updateSteamDeals } from '#tasks/updateSteamDeals.task.ts'
 import { broadcastSteamUpdate } from '#tasks/broadcastSteamUpdate.task.ts'
 
+import { logger } from '#logger/index.ts'
+
 const DAILY_SCHEDULE = config.cronSchedule
 const TIMEZONE = 'UTC'
 
 async function primeCache(): Promise<void> {
+  const start = Date.now()
   try {
-    console.log('[ cron ] priming steam deals cache...')
+    logger.info('priming steam deals cache...', { module: 'cron' })
     await updateSteamDeals()
 
     const pending = getPendingSteamChanges()
     markSteamChangesNotified(pending.map((c) => c.id))
 
-    console.log(`[ cron ] cache primed, ${pending.length} changes suppressed`)
+    logger.info(`cache primed, ${pending.length} changes suppressed`, { module: 'cron', durationsMs: Date.now() - start })
   } catch (err) {
-    console.error('[ cron ] failed to prime steam deals cache:', err)
+    logger.error('failed to prime steam deals cache', { module: 'cron', err })
   }
 }
 
 async function runDailyUpdate(bot: Bot): Promise<void> {
+  const start = Date.now()
   try {
-    console.log('[ cron ] running daily steam deals update...')
+    logger.info('running daily steam deals update...', { module: 'cron' })
 
     const results = await updateSteamDeals()
     await broadcastSteamUpdate(bot, results)
-    console.log('[ cron ] daily update finished')
+
+    logger.info('daily update finished', {
+      module: 'cron',
+      durationMs: Date.now() - start,
+    })
   } catch (err) {
-    console.error('[ cron ] daily steam update failed: ', err)
+    logger.error('daily steam update failed', { module: 'cron', err })
   }
 }
 
 export function startCronJobs(bot: Bot): void {
+  logger.debug('registering cron schedule', { module: 'cron', schedule: DAILY_SCHEDULE })
+
   primeCache()
 
   cron.schedule(
@@ -47,5 +57,5 @@ export function startCronJobs(bot: Bot): void {
     { timezone: TIMEZONE }
   )
 
-  console.log(`[ cron ] scheduled daily steam update at ${DAILY_SCHEDULE} (${TIMEZONE})`)
+  logger.info(`scheduled daily steam update at ${DAILY_SCHEDULE} (${TIMEZONE})`, { module: 'cron' })
 }
