@@ -1,4 +1,5 @@
 import type { SteamAppDetails, SteamAppDetailsResponse } from '#types/sources/steam.type.ts'
+import { logger } from '#logger/index.ts'
 
 const CACHE_TTL_MS = 60 * 60 * 1000 // 1h
 
@@ -19,8 +20,11 @@ export async function fetchSteamAppDetails(appid: number, cc: string = 'us'): Pr
   const cached = cache.get(key)
 
   if (cached && cached.expiresAt > Date.now()) {
+    logger.debug('app details cache hit', { module: 'steamDetails.source', appid, cc })
     return cached.data
   }
+
+  logger.debug('app details cache miss, fetching', { module: 'steamDetails.source', appid, cc })
 
   try {
     const res = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appid}&cc=${cc}&l=en`)
@@ -31,11 +35,16 @@ export async function fetchSteamAppDetails(appid: number, cc: string = 'us'): Pr
     const entry = json[String(appid)]
 
     const data = entry?.success ? (entry.data as SteamAppDetails) : null
+
+    if (!data) {
+      logger.warn('app details returned no data', { module: 'steamDetails.source', appid, cc })
+    }
+
     cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS })
 
     return data
   } catch (err) {
-    console.error(`Failed to fetch app details for ${appid} (cc=${cc}):`, err)
+    logger.error('failed to fetch app details', { module: 'steamDetails.source', appid, cc, err })
     cache.set(key, { data: null, expiresAt: Date.now() + CACHE_TTL_MS })
     return null
   }
